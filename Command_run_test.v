@@ -115,3 +115,60 @@ fn test_it_can_use_option_first_and_argument_last_to_execute_command() {
     assert result.exit_code == 0
     assert result.output == "Hello ${name} from ${region}!\n"
 }
+
+fn test_it_can_validate_argument() {
+    mut command := Command{
+        input: [@FILE, "Jo"]
+        name: "greet"
+        arguments: [
+            Argument{
+                name: "name"
+                description: "The name to greet."
+                validate: fn (command Command) ! {
+                    name := command.argument("name") or { return error("Name is required") }
+
+                    if name.len < 3 {
+                        return error("Name must be at least 3 characters long.")
+                    }
+                }
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 1
+    assert result.output == "Name must be at least 3 characters long.\n"
+}
+
+fn test_it_can_validate_parameter() {
+    mut command := Command{
+        input: [@FILE, "--region", "USA"]
+        name: "greet"
+        parameters: [
+            Parameter{
+                name: "region"
+                short_name: "r"
+                description: "The region to greet on."
+                validate: fn (command Command) ! {
+                    region := command.parameter("region") or { return error("Region is required.") }
+
+                    if region.len != 2 {
+                        return error("Region must be 2 characters long.")
+                    }
+                }
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 1
+    assert result.output == "Region must be 2 characters long.\n"
+}

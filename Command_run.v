@@ -3,6 +3,15 @@ module commander
 import os { Result }
 
 pub fn (mut command Command) run() Result {
+    command.validate() or {
+        command.print_error(err.msg())
+
+        return Result{
+            exit_code: 1
+            output: command.output
+        }
+    }
+
     terminating_flag := command.get_first_terminating_flag() or { Flag{} }
 
     match terminating_flag {
