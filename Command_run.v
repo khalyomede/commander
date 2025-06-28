@@ -1,14 +1,22 @@
 module commander
 
-pub fn (command Command) run() i8 {
+import os { Result }
+
+pub fn (mut command Command) run() Result {
     terminating_flag := command.get_first_terminating_flag() or { Flag{} }
 
     match terminating_flag {
         TerminatingFlag {
-            return terminating_flag.execute(command)
+            return Result{
+                exit_code: terminating_flag.execute(mut command)
+                output: command.output
+            }
         }
         else {}
     }
 
-    return command.execute(command)
+    return Result{
+        exit_code: command.execute(mut command)
+        output: command.output
+    }
 }
