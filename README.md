@@ -47,7 +47,7 @@ fn main() {
     }
   }
 
-  exit(greet.run())
+  exit(command.run())
 }
 ```
 
