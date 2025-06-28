@@ -38,7 +38,7 @@ fn main() {
         }
       }
     ]
-    execute: fn (command Command) u8 {
+    execute: fn (command Command) i8 {
       name := command.argument("name") or { "Stranger" }
 
       println("Hello ${name}!")
