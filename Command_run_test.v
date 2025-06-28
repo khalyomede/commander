@@ -1,6 +1,6 @@
 module test
 
-import commander { Command, Flag, TerminatingFlag, Parameter, Argument }
+import commander { Command, Flag, TerminatingFlag, Parameter, Argument, ArgumentList }
 
 fn test_it_returns_command_execution_return_code_when_nothing_passed() {
     return_code := i8(42)
@@ -100,6 +100,12 @@ fn test_it_can_use_option_first_and_argument_last_to_execute_command() {
                 description: "The region to greet on."
             }
         ]
+        arguments: [
+            Argument{
+                name: "name"
+                description: "The name to greet."
+            }
+        ]
         execute: fn (mut command Command) i8 {
             region := command.parameter("region") or { "the World" }
             name := command.argument("name") or { "Stranger" }
@@ -124,7 +130,7 @@ fn test_it_can_validate_argument() {
             Argument{
                 name: "name"
                 description: "The name to greet."
-                validate: fn (command Command) ! {
+                validate: fn (mut command Command) ! {
                     name := command.argument("name") or { return error("Name is required") }
 
                     if name.len < 3 {
@@ -153,7 +159,7 @@ fn test_it_can_validate_parameter() {
                 name: "region"
                 short_name: "r"
                 description: "The region to greet on."
-                validate: fn (command Command) ! {
+                validate: fn (mut command Command) ! {
                     region := command.parameter("region") or { return error("Region is required.") }
 
                     if region.len != 2 {
@@ -171,4 +177,72 @@ fn test_it_can_validate_parameter() {
 
     assert result.exit_code == 1
     assert result.output == "Region must be 2 characters long.\n"
+}
+
+fn test_it_can_use_argument_then_argument_lists_when_executing_command() {
+    mut command := Command{
+        input: [@FILE, "John", "Melissa", "Patrick", "Sandy"]
+        name: "greet"
+        arguments: [
+            Argument{
+                name: "name"
+                description: "The name to greet."
+            }
+            ArgumentList{
+                name: "friends"
+                description: "The friends to greet."
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            name := command.argument("name") or { "Stranger" }
+            friends := command.arguments("friends") or { [] }
+            message := "Hello ${name}" + match friends.len {
+                0 { "" }
+                else { " and your friends ${friends.join(", ")}" }
+            } + "!"
+
+            command.println(message)
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == "Hello John and your friends Melissa, Patrick, Sandy!\n"
+}
+
+fn test_it_always_fill_argument_list_and_let_following_argument_empty_when_executing_command() {
+    mut command := Command{
+        input: [@FILE, "John", "Melissa", "Patrick", "Sandy"]
+        name: "greet"
+        arguments: [
+            ArgumentList{
+                name: "friends"
+                description: "The friends to greet."
+            }
+            Argument{
+                name: "name"
+                description: "The name to greet."
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            name := command.argument("name") or { "Stranger" }
+            friends := command.arguments("friends") or { [] }
+            message := "Hello ${name}" + match friends.len {
+                0 { "" }
+                else { " and your friends ${friends.join(", ")}" }
+            } + "!"
+
+            command.println(message)
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == "Hello Stranger and your friends John, Melissa, Patrick, Sandy!\n"
 }

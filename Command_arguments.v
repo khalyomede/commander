@@ -1,6 +1,6 @@
 module commander
 
-pub fn (mut command Command) argument(name string) ?string {
+pub fn (mut command Command) arguments(name string) ?[]string {
     parts := command.parts()
     mut arguments := command.arguments.clone()
 
@@ -27,7 +27,7 @@ pub fn (mut command Command) argument(name string) ?string {
                     if argument.name == name {
                         command.reset_argument_values()
 
-                        return part
+                        return []
                     }
 
                     argument.values << part
@@ -35,12 +35,6 @@ pub fn (mut command Command) argument(name string) ?string {
                     break
                 }
                 ArgumentList {
-                    if argument.name == name {
-                        command.reset_argument_values()
-
-                        return none
-                    }
-
                     argument.values << part
 
                     break
@@ -48,6 +42,23 @@ pub fn (mut command Command) argument(name string) ?string {
                 else {
                     break
                 }
+            }
+        }
+    }
+
+    for argument in arguments {
+        match argument {
+            ArgumentList {
+                if argument.name == name {
+                    values := argument.values
+
+                    command.reset_argument_values()
+
+                    return values
+                }
+            }
+            else {
+                continue
             }
         }
     }

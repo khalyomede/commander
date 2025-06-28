@@ -1,11 +1,11 @@
 module commander
 
-fn (command Command) validate() ! {
+fn (mut command Command) validate() ! {
     for argument in command.arguments {
-        argument.validate(command)!
+        argument.validate(mut command)!
     }
 
     for parameter in command.parameters {
-        parameter.validate(command)!
+        parameter.validate(mut command)!
     }
 }

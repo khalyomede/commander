@@ -6,7 +6,7 @@ pub struct Command {
         name string
         flags []CommandFlag
         parameters []Parameter
-        arguments []Argument
+        arguments []CommandArgument
         examples map[string]string
         execute fn (mut Command) i8 @[required]
 
