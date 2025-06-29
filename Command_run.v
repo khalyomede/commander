@@ -3,6 +3,41 @@ module commander
 import os { Result }
 
 pub fn (mut command Command) run() Result {
+    // Runs sub command if it matches the first argument
+    mut sub_command := command.get_sub_command() or {
+        Command{
+            name: ""
+            execute: fn (mut command Command) i8 {
+                return 0
+            }
+        }
+    }
+
+    if sub_command.name.len > 0 {
+        mut sub_command_found := false
+        mut parts := []string{}
+
+        for part in command.input {
+            if part == sub_command.name && !sub_command_found {
+                sub_command_found = true
+            } else {
+                parts << part
+            }
+        }
+
+        mut command_to_run := Command{
+            ...sub_command
+            input: parts
+            parent_name: match command.parent_name.len > 0 {
+                true { "${command.parent_name} ${command.name}" }
+                else { "${command.name}" }
+            }
+        }
+
+        return command_to_run.run()
+    }
+
+    // Runs the first-level command
     command.validate() or {
         command.print_error(err.msg())
 

@@ -1,7 +1,10 @@
 module commander
 
 pub fn (mut command Command) help() i8 {
-    mut usage := "  ${command.name}"
+    mut usage := "  " + match command.parent_name.len > 0 {
+        true { "${command.parent_name} ${command.name}" }
+        else { command.name }
+    }
 
     for argument in command.arguments {
         usage += match argument {

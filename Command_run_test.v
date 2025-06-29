@@ -310,3 +310,95 @@ fn test_it_returns_help() {
         ""
     ].join("\n")
 }
+
+fn test_it_runs_sub_command() {
+    mut command := Command{
+        input: [@FILE, "install"]
+        name: "greet"
+        commands: [
+            Command{
+                name: "install"
+                execute: fn (mut command Command) i8 {
+                    command.println("Installing...")
+
+                    return 0
+                }
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            println("nothing")
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == "Installing...\n"
+}
+
+fn test_it_can_react_to_terminating_flag_on_sub_command() {
+    mut command := Command{
+        input: [@FILE, "install", "--help"]
+        name: "greet"
+        flags: [
+            TerminatingFlag{
+                name: "help"
+                short_name: "h"
+                execute: fn (mut command Command) i8 {
+                    return command.help()
+                }
+            }
+        ]
+        parameters: [
+            Parameter{
+                name: "region"
+                short_name: "r"
+            }
+        ]
+        commands: [
+            Command{
+                name: "install"
+                description: "Install dependencies."
+                flags: [
+                    TerminatingFlag{
+                        name: "help"
+                        short_name: "h"
+                        description: "Display the manual."
+                        execute: fn (mut command Command) i8 {
+                            return command.help()
+                        }
+                    }
+                ]
+                execute: fn (mut command Command) i8 {
+                    command.println("Installing...")
+
+                    return 0
+                }
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            command.println("Hello world!")
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == [
+        "install"
+        "Install dependencies."
+        ""
+        "Usage"
+        ""
+        "  greet install [--help]"
+        ""
+        "Flags"
+        ""
+        "  --help, -h  Display the manual."
+        ""
+    ].join("\n")
+}
