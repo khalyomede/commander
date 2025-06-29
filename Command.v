@@ -4,6 +4,7 @@ pub struct Command {
     pub:
         input []string
         name string
+        description string
         flags []CommandFlag
         parameters []Parameter
         arguments []CommandArgument

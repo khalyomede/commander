@@ -1,6 +1,6 @@
 module commander
 
-pub struct Argument {
+pub struct Argument implements CommandArgument {
     pub:
         name string
         description string

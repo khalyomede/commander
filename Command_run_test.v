@@ -246,3 +246,67 @@ fn test_it_always_fill_argument_list_and_let_following_argument_empty_when_execu
     assert result.exit_code == 0
     assert result.output == "Hello Stranger and your friends John, Melissa, Patrick, Sandy!\n"
 }
+
+fn test_it_returns_help() {
+    mut command := Command{
+        input: [@FILE, "--help"]
+        name: "Greet"
+        description: "Welcome the user."
+        arguments: [
+            Argument{
+                name: "person"
+                description: "The person to greet."
+            }
+            ArgumentList{
+                name: "friends"
+                description: "Additional persons to greet."
+            }
+        ]
+        flags: [
+            TerminatingFlag{
+                name: "help"
+                short_name: "h"
+                description: "Display the manual."
+                execute: fn (mut command Command) i8 {
+                    return command.help()
+                }
+            }
+        ]
+        parameters: [
+            Parameter{
+                name: "region"
+                short_name: "r"
+                description: "Change the region to greet the user."
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == [
+        "Greet",
+        "Welcome the user."
+        ""
+        "Usage"
+        ""
+        "  Greet <person> <...friends> [--region=] [--help]"
+        ""
+        "Arguments"
+        ""
+        "  person  The person to greet."
+        "  friends  Additional persons to greet."
+        ""
+        "Parameters"
+        ""
+        "  --region, -r  Change the region to greet the user."
+        ""
+        "Flags"
+        ""
+        "  --help, -h  Display the manual."
+        ""
+    ].join("\n")
+}
