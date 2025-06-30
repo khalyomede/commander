@@ -402,3 +402,28 @@ fn test_it_can_react_to_terminating_flag_on_sub_command() {
         ""
     ].join("\n")
 }
+
+fn test_it_can_handle_equal_separated_parameters() {
+    mut command := Command{
+        input: [@FILE, "--region=Bahamas"]
+        name: "greet"
+        parameters: [
+            Parameter{
+                name: "region"
+                short_name: "r"
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            region := command.parameter("region") or { "Everywhere" }
+
+            command.println("Hello from ${region}")
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == "Hello from Bahamas\n"
+}

@@ -13,8 +13,18 @@ pub fn (command Command) parameter(name string) ?string {
         }
 
         if command.has_parameter(part) {
-            return parts[index + 1] or {
-                return none
+            if command.parameter_uses_equal_sign_as_separator(part) {
+                parameter_parts := part.split("=")
+
+                if parameter_parts.len < 2 {
+                    return none
+                }
+
+                return parameter_parts[1]
+            } else {
+                return parts[index + 1] or {
+                    return none
+                }
             }
         }
     }
