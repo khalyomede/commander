@@ -427,3 +427,57 @@ fn test_it_can_handle_equal_separated_parameters() {
     assert result.exit_code == 0
     assert result.output == "Hello from Bahamas\n"
 }
+
+fn test_it_detects_when_flag_is_present() {
+    mut command := Command{
+        input: [@FILE, "--quiet"]
+        name: "greet"
+        flags: [
+            Flag{
+                name: "quiet"
+                short_name: "q"
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            if !command.has_flag("quiet") {
+                command.println("Command start...")
+            }
+
+            command.println("Hello world!")
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == "Hello world!\n"
+}
+
+fn test_it_is_able_to_not_detect_flag_when_it_is_not_present() {
+    mut command := Command{
+        input: [@FILE]
+        name: "greet"
+        flags: [
+            Flag{
+                name: "quiet"
+                short_name: "q"
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            if !command.has_flag("quiet") {
+                command.println("Starting...")
+            }
+
+            command.println("Hello world!")
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == "Starting...\nHello world!\n"
+}
