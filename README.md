@@ -48,6 +48,8 @@ Hello John!
 
 - [About](#about)
 - [Features](#features)
+- [Installation](#installation)
+- [Examples](#examples)
 
 ## About
 
@@ -110,6 +112,7 @@ You should end up with a folder tree like this:
   - [Simple argument](#simple-argument)
   - [Argument list](#argument-list)
   - [Getting an argument value](#getting-an-argument-value)
+  - [Validate an argument](#validate-an-argument)
 - Flags
   - [Add a flag](#add-a-flag)
   - [Add a terminating flag](#add-a-terminating-flag)
@@ -117,6 +120,11 @@ You should end up with a folder tree like this:
 - Parameter
   - [Add a parameter](#add-a-parameter)
   - [Get the value of a parameter](#get-the-value-of-a-parameter)
+  - [Validate a parameter](#validate-a-parameter)
+- Testing
+  - [Testing the output](#testing-the-output)
+  - [Testing the exit code](#testing-the-exit-code)
+- [Create sub commands](#create-sub-commands)
 
 ### Hello world
 
@@ -130,6 +138,7 @@ fn main() {
   mut command := Command{
     input: os.args
     name: "greet"
+    description: "Greet the user."
     execute: fn (mut command Command) i8 {
       println("Hello world!")
 
@@ -140,6 +149,8 @@ fn main() {
   command.serve()
 }
 ```
+
+[back to examples](#examples)
 
 ### Display help documentation
 
@@ -155,7 +166,7 @@ fn main() {
   mut command := Command{
     input: os.args
     name: "greet"
-    description: "A command to greet!"
+    description: "Greet the user."
     flags: [
       TerminatingFlag{
         name: "help"
@@ -177,6 +188,8 @@ fn main() {
 }
 ```
 
+[back to examples](#examples)
+
 ### Simple argument
 
 Argument are the basic information passed after the command name.
@@ -191,9 +204,11 @@ fn main() {
   mut command := Command{
     input: os.args
     name: "greet"
+    description: "Greet the user."
     arguments: [
       Argument{
         name: "person"
+        description: "The name of the person to greet"
       }
     ]
     execute: fn (mut command Command) i8 {
@@ -209,6 +224,8 @@ fn main() {
 }
 ```
 
+[back to examples](#examples)
+
 ### Argument list
 
 You can catch all argument in the form of a list using an ArgumentList.
@@ -223,9 +240,11 @@ fn main() {
   mut command := Command{
     input: os.args
     name: "greet"
+    description: "Greet the user."
     arguments: [
       ArgumentList{
         name: "friends"
+        description: "The name of the friends to greet."
       }
     ]
     execute: fn (mut command Command) i8 {
@@ -242,6 +261,8 @@ fn main() {
 }
 ```
 
+[back to examples](#examples)
+
 ### Getting an argument value
 
 For simple Argument, use `command.argument()`, for ArgumentList use `command.arguments()`.
@@ -256,12 +277,15 @@ fn main() {
   mut command := Command{
     input: os.args
     name: "greet"
+    description: "Greet the user."
     arguments: [
       Argument{
         name: "person"
+        description: "The name of the person to greet."
       }
       ArgumentList{
         name: "friends"
+        description: "The name of the friends to greet."
       }
     ]
     execute: fn (mut command Command) i8 {
@@ -278,6 +302,51 @@ fn main() {
 }
 ```
 
+[back to examples](#examples)
+
+### Validate an argument
+
+Note that when the command validation fails, it automatically returns an exit code 1.
+
+```v
+module main
+
+import khalyomede.commander { Command, Argument }
+import os
+
+fn main() {
+  mut command := Command{
+    input: os.args
+    name: "greet"
+    description: "Greet the user."
+    arguments: [
+      Argument{
+        name: "person"
+        description: "The name of the person to greet."
+        validate: fn (mut command Command) ! {
+          person := command.argument("person") or { "" }
+
+          if person.len == 0 {
+            return error("The person argument is required.")
+          }
+        }
+      }
+    ]
+    execute: fn (mut command Command) i8 {
+      person := command.argument("person") or { "Stranger" }
+
+      println("Hello ${person}!")
+
+      return 0
+    }
+  }
+
+  command.serve()
+}
+```
+
+[back to examples](#examples)
+
 ### Add a flag
 
 A flag is a simple trigger that helps you customize the behavior of your command according to the presence of absence of this flag.
@@ -292,6 +361,7 @@ fn main() {
   mut command := Command{
     input: os.args
     name: "greet"
+    description: "Greet the user."
     flags: [
       Flag{
         name: "quiet"
@@ -318,6 +388,8 @@ fn main() {
 }
 ```
 
+[back to examples](#examples)
+
 ### Add a terminating flag
 
 Terminating flag interrupt the program when present, by specifying a custom termination code.
@@ -332,10 +404,12 @@ fn main() {
   mut command := Command{
     input: os.args
     name: "greet"
+    description: "Greet the user."
     flags: [
       TerminatingFlag{
         name: "version"
         short_name: "v"
+        description: "Display the current version."
         execute: fn (mut command Command) i8 {
           println("v0.1.0")
 
@@ -354,6 +428,8 @@ fn main() {
 }
 ```
 
+[back to examples](#examples)
+
 ### Check if a flag is present
 
 Use `command.has_flag("name")` to check for a flag presence.
@@ -368,10 +444,12 @@ fn main() {
   mut command := Command{
     input: os.args
     name: "greet"
+    description: "Greet the user."
     flags: [
       Flag{
         name: "quiet"
         short_name: "q"
+        description: "Display less debug information."
       }
     ]
     execute: fn (mut command Command) i8 {
@@ -388,3 +466,237 @@ fn main() {
   command.serve()
 }
 ```
+
+[back to examples](#examples)
+
+### Add a parameter
+
+```v
+module main
+
+import khalyomede.commander { Command, Parameter }
+import os
+
+fn main() {
+  mut command := {
+    input: os.args
+    name: "greet"
+    description: "Greet the user."
+    parameters: [
+      Parameter{
+        name: "region"
+        short_name: "r"
+        description: "Greet on the given region."
+      }
+    ]
+    execute: fn (mut command Command) i8 {
+      println("Hello world")
+
+      return 0
+    }
+  }
+
+  command.serve()
+}
+```
+
+[back to examples](#examples)
+
+### Get the value of a parameter
+
+```v
+module main
+
+import khalyomede.commander { Command, Parameter }
+import os
+
+fn main() {
+  mut command := {
+    input: os.args
+    name: "greet"
+    description: "Greet the user."
+    parameters: [
+      Parameter{
+        name: "region"
+        short_name: "r"
+        description: "Greet on the given region."
+      }
+    ]
+    execute: fn (mut command Command) i8 {
+      region := command.parameter("region") or { "World" }
+
+      println("Hello {$region$}!")
+
+      return 0
+    }
+  }
+
+  command.serve()
+}
+```
+
+[back to examples](#examples)
+
+### Validate a parameter
+
+Note that when the command validation fails, it automatically returns an exit code 1.
+
+```v
+module main
+
+import khalyomede.commander { Command, Parameter }
+import os
+
+fn main() {
+  mut command := {
+    input: os.args
+    name: "greet"
+    description: "Greet the user."
+    parameters: [
+      Parameter{
+        name: "region"
+        short_name: "r"
+        description: "Greet on the given region."
+        validate: fn (mut command Command) ! {
+          region := command.parameter("region") or {
+            return error("Missing parameter --region.")
+          }
+
+          if !region.contains(["World", "Paris"]) {
+            return error("Parameter --region must be either World or Paris.")
+          }
+        }
+      }
+    ]
+    execute: fn (mut command Command) i8 {
+      region := command.parameter("region") or { "World" }
+
+      println("Hello {$region$}!")
+
+      return 0
+    }
+  }
+
+  command.serve()
+}
+```
+
+[back to examples](#examples)
+
+### Testing the output
+
+You can use `command.println()` and `command.print_error()` to ease the testing. They still behave like the built-in `println()` and `eprintln()`.
+
+```v
+module test
+
+import khalyomede.commander { Command, Argument }
+
+pub fn test_it_greet_user() {
+  mut command := Command{
+    input: [@FILE, "John"]
+    name: "greet"
+    description: "Greet the user."
+    arguments: [
+      Argument{
+        name: "person"
+        description: "The person to greet."
+      }
+    ]
+    execute: fn (mut command Command) i8 {
+      person := command.argument("person") or { "World" }
+
+      command.println("Hello ${person}!")
+
+      return 0
+    }
+  }
+
+  result := command.run()
+
+  assert result.output == "Hello John!\n"
+}
+```
+
+[back to examples](#examples)
+
+### Testing the exit code
+
+```v
+module test
+
+import khalyomede.commander { Command, Argument }
+
+pub fn test_it_returns_error_when_name_is_not_passed() {
+  mut command := Command{
+    input: [@FILE]
+    name: "greet"
+    description: "Greet the user."
+    arguments: [
+      Argument{
+        name: "person"
+        description: "The name of the person to greet."
+        validate: fn (mut command Command) i8 {
+          person := command.argument("person") or { "" }
+
+          if person.len == 0 {
+            return error("Argument person is required.")
+          }
+        }
+      }
+    ]
+    execute: fn (mut command Command) i8 {
+      person := command.argument("person") or { "World" }
+
+      command.println("Hello ${person}!")
+
+      return 0
+    }
+  }
+
+  result := command.run()
+
+  assert result.exit_code == 1
+}
+```
+
+[back to examples](#examples)
+
+### Create sub commands
+
+You can declare sub commands, that will have the same capabilities as mentioned above.
+
+For example you can have a base command `greet John`, and you could have a sub command `greet install --quiet`.
+
+```v
+module main
+
+import khalyomede.commander { Command }
+import os
+
+fn main() {
+  mut command := Command{
+    input: os.args
+    name: "greet"
+    description: "Greet the user."
+    commands: [
+      Command{
+        name: "install"
+        description: "Install the greet command."
+        execute: fn (mut command Command) i8 {
+          println("Installing...")
+
+          return 0
+        }
+      }
+    ]
+    execute: fn (mut command Command) i8 {
+      println("Hello world!")
+
+      return 0
+    }
+  }
+}
+```
+
+[back to examples](#examples)
