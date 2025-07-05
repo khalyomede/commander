@@ -562,7 +562,7 @@ fn main() {
             return error("Missing parameter --region.")
           }
 
-          if !region.contains(["World", "Paris"]) {
+          if !["World", "Paris"].contains(region) {
             return error("Parameter --region must be either World or Paris.")
           }
         }
