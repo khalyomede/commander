@@ -29,5 +29,12 @@ pub fn (command Command) parameter(name string) ?string {
         }
     }
 
+    // Check for default value when parameter is not found
+    for parameter in command.parameters {
+        if parameter.name == name && parameter.default.len > 0 {
+            return parameter.default
+        }
+    }
+
     return none
 }

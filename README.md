@@ -121,6 +121,7 @@ You should end up with a folder tree like this:
   - [Add a parameter](#add-a-parameter)
   - [Get the value of a parameter](#get-the-value-of-a-parameter)
   - [Validate a parameter](#validate-a-parameter)
+  - [Parameter default value](#parameter-default-value)
 - Testing
   - [Testing the output](#testing-the-output)
   - [Testing the exit code](#testing-the-exit-code)
@@ -572,6 +573,42 @@ fn main() {
       region := command.parameter("region") or { "World" }
 
       println("Hello {$region$}!")
+
+      return 0
+    }
+  }
+
+  command.serve()
+}
+```
+
+[back to examples](#examples)
+
+### Parameter default value
+
+```v
+module main
+
+import khalyomede.commander { Command, Parameter }
+import os
+
+fn main() {
+  mut command := Command{
+    input: os.args
+    name: "greet"
+    description: "Greet the user."
+    parameters: [
+      Parameter{
+        name: "region"
+        short_name: "r"
+        description: "Greet on the given region."
+        default: "Universe"
+      }
+    ]
+    execute: fn (mut command Command) i8 {
+      region := command.parameter("region") or { "" } // Default to "Universe"
+
+      println("Hello from ${region}!")
 
       return 0
     }

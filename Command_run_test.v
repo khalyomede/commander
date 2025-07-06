@@ -481,3 +481,64 @@ fn test_it_is_able_to_not_detect_flag_when_it_is_not_present() {
     assert result.exit_code == 0
     assert result.output == "Starting...\nHello world!\n"
 }
+
+fn test_it_uses_default_value_when_parameter_is_not_passed() {
+    mut command := Command{
+        input: [@FILE]
+        name: "greet"
+        parameters: [
+            Parameter{
+                name: "region"
+                short_name: "r"
+                description: "The region to greet on."
+                default: "euw-1"
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            region := command.parameter("region") or { "the World" }
+
+            command.println("Hello world from ${region}!")
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == "Hello world from euw-1!\n"
+}
+
+fn test_it_shows_default_value_in_help_documentation() {
+    mut command := Command{
+        input: [@FILE, "--help"]
+        name: "greet"
+        description: "Greet the user."
+        parameters: [
+            Parameter{
+                name: "region"
+                short_name: "r"
+                description: "The region to greet on."
+                default: "euw-1"
+            }
+        ]
+        flags: [
+            TerminatingFlag{
+                name: "help"
+                short_name: "h"
+                description: "Display the manual."
+                execute: fn (mut command Command) i8 {
+                    return command.help()
+                }
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output.contains("--region, -r  The region to greet on. (default: euw-1)")
+}

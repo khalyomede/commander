@@ -49,7 +49,7 @@ pub fn (mut command Command) help() i8 {
         lines << ["", "Parameters", ""]
 
         for parameter in command.parameters {
-            lines << element_to_help(parameter.name, parameter.short_name, parameter.description)
+            lines << element_to_help(parameter.name, parameter.short_name, parameter.description, parameter.default)
         }
     }
 
@@ -57,7 +57,7 @@ pub fn (mut command Command) help() i8 {
         lines << ["", "Flags", ""]
 
         for flag in command.flags {
-            lines << element_to_help(flag.name, flag.short_name, flag.description)
+            lines << element_to_help(flag.name, flag.short_name, flag.description, "")
         }
     }
 
