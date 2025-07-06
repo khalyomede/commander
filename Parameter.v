@@ -6,5 +6,6 @@ pub struct Parameter {
         short_name string
         description string
         default string = ""
+        allowed []string
         validate fn (mut Command) ! = fn (mut command Command) ! {}
 }

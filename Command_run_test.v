@@ -542,3 +542,91 @@ fn test_it_shows_default_value_in_help_documentation() {
     assert result.exit_code == 0
     assert result.output.contains("--region, -r  The region to greet on. (default: euw-1)")
 }
+
+fn test_it_returns_error_when_parameter_value_is_not_in_allowed_values() {
+    mut command := Command{
+        input: [@FILE, "--region", "usa"]
+        name: "greet"
+        parameters: [
+            Parameter{
+                name: "region"
+                short_name: "r"
+                description: "The region to greet on."
+                allowed: ["euw-1", "euw-2", "euw-3"]
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            region := command.parameter("region") or { "the World" }
+
+            command.println("Hello world from ${region}!")
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 1
+    assert result.output.contains("Parameter --region must be one of: euw-1, euw-2, euw-3")
+}
+
+fn test_it_accepts_parameter_value_when_it_is_in_allowed_values() {
+    mut command := Command{
+        input: [@FILE, "--region", "euw-2"]
+        name: "greet"
+        parameters: [
+            Parameter{
+                name: "region"
+                short_name: "r"
+                description: "The region to greet on."
+                allowed: ["euw-1", "euw-2", "euw-3"]
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            region := command.parameter("region") or { "the World" }
+
+            command.println("Hello world from ${region}!")
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == "Hello world from euw-2!\n"
+}
+
+fn test_it_shows_allowed_values_in_help_documentation() {
+    mut command := Command{
+        input: [@FILE, "--help"]
+        name: "greet"
+        description: "Greet the user."
+        parameters: [
+            Parameter{
+                name: "region"
+                short_name: "r"
+                description: "The region to greet on."
+                allowed: ["euw-1", "euw-2", "euw-3"]
+            }
+        ]
+        flags: [
+            TerminatingFlag{
+                name: "help"
+                short_name: "h"
+                description: "Display the manual."
+                execute: fn (mut command Command) i8 {
+                    return command.help()
+                }
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output.contains("--region, -r  The region to greet on. (allowed: euw-1, euw-2, euw-3)")
+}
