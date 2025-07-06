@@ -49,6 +49,7 @@ Hello John!
 - [About](#about)
 - [Features](#features)
 - [Installation](#installation)
+- [Differences between arguments, flags and parameters](#differences-between-arguments-flags-and-parameters)
 - [Examples](#examples)
 
 ## About
@@ -103,6 +104,20 @@ You should end up with a folder tree like this:
     ├── ...
     └── v.mod
 ```
+
+## Differences between arguments, flags and parameters
+
+### Arguments
+
+These are the values you provide by default to the command. For example if your command is an AI agent expecting a message, an argument will typically be the right component to use.
+
+### Flags
+
+These are made to customize the behavior of your command. They accept no values. You can only check for the presence (or absence) of a flag. For example, if you display additional debug information, a `--quiet` flag could allow the user to opt-out for these debug information.
+
+### Parameters
+
+These are elements that will customize the behavior of your command, which accept values. For example, if your command deploys a V application on a VPS (cloud server), and by default you deploy on a European (euw-1) zone, you could accept a `--region` parmaeter to let the user customize where the app should be deployed (on "euw-1", "euw-2" or "euw-3").
 
 ## Examples
 
@@ -251,9 +266,9 @@ fn main() {
     ]
     execute: fn (mut command Command) i8 {
       friends := command.arguments("friends") or { ["World"] }
-      message := friends.join(", ")
+      friends_list := friends.join(", ")
 
-      println("Hello ${friends}!")
+      println("Hello ${friends_list}!")
 
       return 0
     }
@@ -293,8 +308,9 @@ fn main() {
     execute: fn (mut command Command) i8 {
       person := command.argument("person") or { "Stranger" }
       friends := command.arguments("friends") or { ["nobody else"] }
+      friends_list := friends.join(", ")
 
-      println("Hello ${person} and ${friends}!")
+      println("Hello ${person} and ${friends_list}!")
 
       return 0
     }
@@ -367,7 +383,7 @@ fn main() {
     flags: [
       Flag{
         name: "quiet"
-        short_name: "quiet"
+        short_name: "q"
         description: "Display less debug information."
       }
     ]
@@ -480,7 +496,7 @@ import khalyomede.commander { Command, Parameter }
 import os
 
 fn main() {
-  mut command := {
+  mut command := Command{
     input: os.args
     name: "greet"
     description: "Greet the user."
@@ -513,7 +529,7 @@ import khalyomede.commander { Command, Parameter }
 import os
 
 fn main() {
-  mut command := {
+  mut command := Command{
     input: os.args
     name: "greet"
     description: "Greet the user."
@@ -550,7 +566,7 @@ import khalyomede.commander { Command, Parameter }
 import os
 
 fn main() {
-  mut command := {
+  mut command := Command{
     input: os.args
     name: "greet"
     description: "Greet the user."
@@ -712,7 +728,7 @@ pub fn test_it_returns_error_when_name_is_not_passed() {
       Argument{
         name: "person"
         description: "The name of the person to greet."
-        validate: fn (mut command Command) i8 {
+        validate: fn (mut command Command) ! {
           person := command.argument("person") or { "" }
 
           if person.len == 0 {
@@ -772,6 +788,8 @@ fn main() {
       return 0
     }
   }
+
+  command.serve()
 }
 ```
 
