@@ -630,3 +630,55 @@ fn test_it_shows_allowed_values_in_help_documentation() {
     assert result.exit_code == 0
     assert result.output.contains("--region, -r  The region to greet on. (allowed: euw-1, euw-2, euw-3)")
 }
+
+fn test_it_handles_single_dash_parameter() {
+    mut command := Command{
+        input: [@FILE, "-"]
+        name: "greet"
+        parameters: [
+            Parameter{
+                name: "region"
+                short_name: "r"
+                description: "The region to greet on."
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            region := command.parameter("region") or { "World" }
+
+            command.println("Hello ${region}!")
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == "Hello World!\n"
+}
+
+fn test_it_handles_single_dash_argument() {
+    mut command := Command{
+        input: [@FILE, "-"]
+        name: "greet"
+        arguments: [
+            Argument{
+                name: "name"
+                description: "The name to greet."
+            }
+        ]
+        execute: fn (mut command Command) i8 {
+            name := command.argument("name") or { "World" }
+
+            command.println("Hello ${name}!")
+
+            return 0
+        }
+    }
+
+    result := command.run()
+
+    assert result.exit_code == 0
+    assert result.output == "Hello -!\n"
+}
+
